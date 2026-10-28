@@ -2,6 +2,17 @@
 
 import * as React from "react";
 
+/*
+ * Theme is handled entirely via CSS classes on <html>.
+ * The beforeInteractive script in layout.tsx sets the class immediately
+ * on page load (before paint) from localStorage — no flash.
+ *
+ * This hook/context simply gives components a way to read and toggle
+ * the current theme in React state. It does NOT do any localStorage
+ * or DOM access during render — only inside event handlers and useEffect —
+ * so it never blocks static prerendering.
+ */
+
 type Theme = "light" | "dark";
 
 interface ThemeContextValue {
@@ -15,33 +26,24 @@ const ThemeContext = React.createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Default is dark — only override if user has explicitly stored "light"
+  /*
+   * State initialises to "dark" on both server and client first render.
+   * We sync with localStorage in useEffect (client-only) to avoid
+   * hydration mismatches and prerender blocks.
+   */
   const [theme, setTheme] = React.useState<Theme>("dark");
 
   React.useEffect(() => {
-    const stored = localStorage.getItem("orbyte-theme") as Theme | null;
-    if (stored === "light") {
-      // User explicitly chose light — honour it
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    } else {
-      // Stored "dark", stored nothing, or stored anything else → dark
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-      if (!stored) {
-        // Persist the default so future loads are instant
-        localStorage.setItem("orbyte-theme", "dark");
-      }
-    }
+    // Read what the beforeInteractive script already set
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
   }, []);
 
   function toggleTheme() {
-    setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("orbyte-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
-      return next;
-    });
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try { localStorage.setItem("orbyte-theme", next); } catch { /* noop */ }
   }
 
   return (

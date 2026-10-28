@@ -50,36 +50,50 @@ export default function CoinsPage() {
         className={ready ? "anim-fade-up" : ""}
         style={{ opacity: ready ? undefined : 0, animationDuration: "0.4s" }}
       >
-      <div className="max-w-6xl w-full mx-auto page-padding space-y-4">
+      <div className="max-w-6xl w-full mx-auto page-padding" style={{ paddingTop: 12, paddingBottom: 16 }}>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-[--text-primary]">Coins</h1>
-            <div className="flex items-center rounded-lg p-0.5 gap-0.5 bg-[--surface-subtle] border border-[--surface-border]">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Coins</h1>
+            {/* Tab switcher — accent themed active */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 2,
+              borderRadius: 8, padding: 2,
+              background: "var(--surface-subtle)", border: "1px solid var(--surface-border)",
+            }}>
               {TABS.map(t => (
                 <button key={t.id} onClick={() => switchTab(t.id)}
-                  className="rounded-md px-2.5 sm:px-3 py-1.5 text-xs transition-all whitespace-nowrap"
                   style={{
-                    background: tab === t.id ? "var(--surface-main)" : "transparent",
-                    color: tab === t.id ? "var(--text-primary)" : "var(--text-muted)",
-                    fontWeight: tab === t.id ? 600 : 400,
-                    boxShadow: tab === t.id ? "var(--shadow-card)" : "none",
+                    borderRadius: 6, padding: "4px 10px", fontSize: 11,
+                    transition: "all 0.15s", border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                    background: tab === t.id ? "var(--accent)" : "transparent",
+                    color: tab === t.id ? "#fff" : "var(--text-muted)",
+                    fontWeight: tab === t.id ? 700 : 400,
                   }}>
                   {t.label}
                 </button>
               ))}
             </div>
           </div>
-          <div className="relative w-full sm:w-auto">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-muted)" }} />
-            <input type="search" placeholder="Search name, ticker, or address" value={query} onChange={e => setQuery(e.target.value)}
-              className="pl-8 pr-3 h-9 rounded-lg text-xs outline-none w-full sm:w-56"
-              style={{ background: "var(--surface-subtle)", border: "1px solid var(--surface-border)", color: "var(--text-primary)" }} />
+          {/* Search */}
+          <div style={{ position: "relative", width: "100%", maxWidth: 220 }}>
+            <Search size={12} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }} />
+            <input
+              type="search" placeholder="Search name, ticker, or address"
+              value={query} onChange={e => setQuery(e.target.value)}
+              style={{
+                paddingLeft: 28, paddingRight: 10, height: 32, borderRadius: 8,
+                fontSize: 11, outline: "none", width: "100%",
+                background: "var(--surface-subtle)", border: "1px solid var(--surface-border)",
+                color: "var(--text-primary)",
+              }} />
           </div>
         </div>
 
-        <p className="text-xs text-[--text-muted]">{tokens.length} coins · launched by agents on ORBYTE</p>
+        <p style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 10 }}>
+          {tokens.length} coins · launched by agents on ORBYTE · <span style={{ color: "var(--accent)", fontWeight: 600 }}>all locked</span>
+        </p>
 
         {loading ? (
           <div className="coins-grid">

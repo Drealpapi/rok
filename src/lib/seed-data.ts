@@ -196,14 +196,14 @@ export const SEED_TOKENS: SeedToken[] = [
     ticker: "HELIX",
     address: "0xaabbccdd11223344aabbccdd11223344aabbccdd",
     launchingAgentId: "agent-002",
-    status: "open",
-    progressEth: 0.5,
+    status: "locked",            // locked — agents only can trade
+    progressEth: 0.42,
     thresholdEth: 0.5,
     marketCapUsd: 84200,
     volumeUsd: 23100,
     priceChangePercent: 14.2,
     txCount: 318,
-    createdAt: "2026-10-19T08:00:00Z",
+    createdAt: "2026-10-21T10:00:00Z",
   },
   {
     id: "token-002",
@@ -218,7 +218,7 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 9800,
     priceChangePercent: 8.6,
     txCount: 177,
-    createdAt: "2026-10-20T14:30:00Z",
+    createdAt: "2026-10-21T08:30:00Z",
   },
   {
     id: "token-003",
@@ -233,7 +233,6 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 4200,
     priceChangePercent: -3.1,
     txCount: 89,
-    // ~7 hours after the reference date — within the 8h NEW window at runtime
     createdAt: "2026-10-21T06:00:00Z",
   },
   {
@@ -242,14 +241,14 @@ export const SEED_TOKENS: SeedToken[] = [
     ticker: "VTXS",
     address: "0xdd11223344aabbccdd11223344aabbccddeeff00",
     launchingAgentId: "agent-004",
-    status: "open",
-    progressEth: 0.5,
+    status: "locked",
+    progressEth: 0.47,
     thresholdEth: 0.5,
     marketCapUsd: 128000,
     volumeUsd: 61000,
     priceChangePercent: 32.7,
     txCount: 892,
-    createdAt: "2026-10-18T10:00:00Z",
+    createdAt: "2026-10-21T04:00:00Z",
   },
   {
     id: "token-005",
@@ -264,7 +263,6 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 1100,
     priceChangePercent: 2.4,
     txCount: 43,
-    // Recent enough for NEW badge in demo (within 1h of 13:00 reference)
     createdAt: "2026-10-21T12:30:00Z",
   },
   {
@@ -273,14 +271,14 @@ export const SEED_TOKENS: SeedToken[] = [
     ticker: "NVSC",
     address: "0xff11223344aabbccdd11223344aabbccddeeff00",
     launchingAgentId: "agent-006",
-    status: "graduated",
+    status: "locked",            // graduated → locked (trading locked until live)
     progressEth: 0.5,
     thresholdEth: 0.5,
     marketCapUsd: 412000,
     volumeUsd: 198000,
     priceChangePercent: 88.3,
     txCount: 4201,
-    createdAt: "2026-10-15T07:30:00Z",
+    createdAt: "2026-10-20T07:30:00Z",
   },
   {
     id: "token-007",
@@ -295,7 +293,6 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 8400,
     priceChangePercent: 5.9,
     txCount: 156,
-    // ~5 hours after the reference date — shows NEW badge
     createdAt: "2026-10-21T08:00:00Z",
   },
   {
@@ -304,14 +301,14 @@ export const SEED_TOKENS: SeedToken[] = [
     ticker: "EIGL",
     address: "0x2233445566aabbccdd11223344aabbccdd223344",
     launchingAgentId: "agent-001",
-    status: "open",
-    progressEth: 0.5,
+    status: "locked",
+    progressEth: 0.31,
     thresholdEth: 0.5,
     marketCapUsd: 73200,
     volumeUsd: 31000,
     priceChangePercent: 19.1,
     txCount: 487,
-    createdAt: "2026-10-17T12:00:00Z",
+    createdAt: "2026-10-21T02:00:00Z",
   },
 ];
 
@@ -447,34 +444,30 @@ export const SEED_POSTS: SeedPost[] = [
 // ─── Utility: coin age & performance badges ─────────────────────────────────
 
 /**
- * NEW badge — only show for coins created within the last 60 minutes.
- * (User spec: "only coins about an hour old")
+ * NEW badge — coins created within the last 24 hours.
+ * User spec: "about a day old"
  */
 export function isJustLaunched(createdAt: string): boolean {
   const ageMs = Date.now() - new Date(createdAt).getTime();
-  return ageMs >= 0 && ageMs <= 60 * 60 * 1000; // 0 – 60 min
+  return ageMs >= 0 && ageMs <= 24 * 60 * 60 * 1000; // 0 – 24h
 }
 
 /**
- * HOT badge — coin is doing well:
- *   - price up ≥ 15%, OR
- *   - graduated (pool opened), OR
- *   - high tx count (> 300)
+ * HOT badge — coin is performing well:
+ *   - price change ≥ +15% (strong uptrend), OR
+ *   - very high tx activity (> 400)
+ * Graduated/open status no longer triggers HOT — all coins are locked.
  */
 export function isHot(token: SeedToken): boolean {
-  return (
-    token.priceChangePercent >= 15 ||
-    token.status === "graduated"   ||
-    token.txCount > 300
-  );
+  return token.priceChangePercent >= 15 || token.txCount > 400;
 }
 
-/** Legacy: kept for any existing callers — now equivalent to isJustLaunched */
+/** Legacy alias */
 export function isRecentlyLaunched(createdAt: string): boolean {
   return isJustLaunched(createdAt);
 }
 
-/** Returns true if the coin was created within the last 60 minutes (brand new). */
+/** Returns true if coin is brand new (< 1h) */
 export function isBrandNew(createdAt: string): boolean {
   const ageMs = Date.now() - new Date(createdAt).getTime();
   return ageMs <= 60 * 60 * 1000;

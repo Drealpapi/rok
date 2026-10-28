@@ -5,7 +5,7 @@ import { ApplicationShell } from "@/components/layout/application-shell";
 import { Agent3D } from "@/components/shared/agent-3d";
 import { ProfileTabsTokenClient } from "./token-tabs";
 import { SEED_TOKENS, SEED_AGENTS } from "@/lib/seed-data";
-import { formatNumber, shortAddress } from "@/lib/utils";
+import { formatNumber, shortAddress, hashString } from "@/lib/utils";
 
 interface TokenPageProps { params: Promise<{ address: string }> }
 
@@ -162,14 +162,71 @@ export default async function TokenDetailPage({ params }: TokenPageProps) {
                 ◉ Events
               </button>
             </div>
-            {/* Chart placeholder */}
-            <div className="w-full rounded-xl flex items-center justify-center"
-              style={{ height: "160px", background: "var(--surface-subtle)", border: "1px solid var(--surface-border)" }}>
-              <div className="text-center">
-                <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Chart — development mode</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>No live price data in dev mode</p>
-              </div>
-            </div>
+            {/* Chart — deterministic SVG based on token data */}
+            {(() => {
+              const W = 600, H = 160;
+              const h = hashString(token.ticker);
+              const rawPts = Array.from({ length: 40 }, (_, i) => {
+                const v = ((h * (i + 1) * 2654435761) >>> 0) % 1000 / 1000;
+                const trend = token.priceChangePercent >= 0 ? (i / 39) * 0.45 : -(i / 39) * 0.45;
+                return Math.max(0.02, Math.min(0.98, v * 0.5 + 0.25 + trend));
+              });
+              const minV = Math.min(...rawPts), maxV = Math.max(...rawPts), range = maxV - minV || 1;
+              const xy = rawPts.map((v, i): [number, number] => [
+                (i / (rawPts.length - 1)) * W,
+                H - ((v - minV) / range) * (H - 20) - 10,
+              ]);
+              let d = `M ${xy[0][0].toFixed(1)} ${xy[0][1].toFixed(1)}`;
+              for (let i = 1; i < xy.length; i++) {
+                const cpx = ((xy[i-1][0] + xy[i][0]) / 2).toFixed(1);
+                d += ` C ${cpx} ${xy[i-1][1].toFixed(1)}, ${cpx} ${xy[i][1].toFixed(1)}, ${xy[i][0].toFixed(1)} ${xy[i][1].toFixed(1)}`;
+              }
+              const closedD = `${d} L ${W} ${H} L 0 ${H} Z`;
+              const color = token.priceChangePercent >= 0 ? "#4ade80" : "#f87171";
+              const lastPt = xy[xy.length - 1];
+              // Y-axis labels
+              const yLabels = Array.from({ length: 4 }, (_, i) => {
+                const frac = i / 3;
+                const val = token.marketCapUsd * (0.85 + frac * 0.30);
+                return { y: H - frac * (H - 20) - 10, label: `$${formatNumber(val, 1)}` };
+              });
+              return (
+                <div style={{ position: "relative", width: "100%", borderRadius: 10, overflow: "hidden", background: "var(--surface-subtle)", border: "1px solid var(--surface-border)" }}>
+                  <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" style={{ display: "block" }}>
+                    <defs>
+                      <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"   stopColor={color} stopOpacity="0.20" />
+                        <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                      </linearGradient>
+                    </defs>
+                    {/* Grid lines */}
+                    {yLabels.map((yl, i) => (
+                      <line key={i} x1="0" y1={yl.y} x2={W} y2={yl.y}
+                        stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+                    ))}
+                    {/* Fill */}
+                    <path d={closedD} fill="url(#chartFill)" />
+                    {/* Line */}
+                    <path d={d} stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Current price dot */}
+                    <circle cx={lastPt[0]} cy={lastPt[1]} r="4" fill={color} />
+                    <circle cx={lastPt[0]} cy={lastPt[1]} r="8" fill={color} fillOpacity="0.20" />
+                  </svg>
+                  {/* Price label overlay */}
+                  <div style={{ position: "absolute", right: 8, top: lastPt[1] / H * 100 + "%", transform: "translateY(-50%)" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", background: color, borderRadius: 4, padding: "2px 6px", fontVariantNumeric: "tabular-nums" }}>
+                      ${formatNumber(token.marketCapUsd, 1)}K
+                    </span>
+                  </div>
+                  {/* Y-axis labels */}
+                  <div style={{ position: "absolute", right: 8, top: 8, bottom: 8, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none" }}>
+                    {yLabels.slice().reverse().map((yl, i) => (
+                      <span key={i} style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontVariantNumeric: "tabular-nums" }}>{yl.label}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Pool progress — right column */}

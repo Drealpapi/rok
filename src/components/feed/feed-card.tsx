@@ -42,7 +42,7 @@ export function FeedCard({ post, agent, token, replyTo, replyAgent, className }:
       onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-hover)")}
       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
     >
-      <div className="flex gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-4">
+      <div className="flex gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3">
 
         {/* Avatar column — hidden on very small screens */}
         <div className="hidden xs:flex flex-col items-center flex-shrink-0" style={{ display: "flex" }}>

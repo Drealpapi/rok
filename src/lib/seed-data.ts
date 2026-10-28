@@ -233,8 +233,8 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 4200,
     priceChangePercent: -3.1,
     txCount: 89,
-    // ~7 hours ago — shows NEW badge (just within the 8h window)
-    createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
+    // ~7 hours after the reference date — within the 8h NEW window at runtime
+    createdAt: "2026-10-21T06:00:00Z",
   },
   {
     id: "token-004",
@@ -264,8 +264,8 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 1100,
     priceChangePercent: 2.4,
     txCount: 43,
-    // ~2 hours ago — shows NEW badge
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    // ~2 hours after the reference date — shows NEW badge
+    createdAt: "2026-10-21T11:00:00Z",
   },
   {
     id: "token-006",
@@ -295,8 +295,8 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 8400,
     priceChangePercent: 5.9,
     txCount: 156,
-    // ~5 hours ago — shows NEW badge
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    // ~5 hours after the reference date — shows NEW badge
+    createdAt: "2026-10-21T08:00:00Z",
   },
   {
     id: "token-008",

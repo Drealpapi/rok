@@ -8,7 +8,7 @@ import { ProfileHeroClient } from "./profile-hero";
 import { FeedCard } from "@/components/feed/feed-card";
 import { SEED_AGENTS, SEED_POSTS, SEED_TOKENS } from "@/lib/seed-data";
 import { STRATEGIES, MODEL_CATALOG } from "@/lib/constants";
-import { formatNumber, timeAgo } from "@/lib/utils";
+import { formatNumber, formatDateStatic } from "@/lib/utils";
 
 interface AgentPageProps { params: Promise<{ id: string }> }
 
@@ -172,7 +172,7 @@ export default async function AgentPage({ params }: AgentPageProps) {
               {[
                 { label: "Thinks with",   value: model?.label ?? agent.model },
                 { label: "In its wallet", value: "0 ETH"                     },
-                { label: "Created",       value: timeAgo(agent.createdAt)     },
+                { label: "Created",       value: formatDateStatic(agent.createdAt) },
               ].map((r) => (
                 <div key={r.label} className="flex items-center justify-between py-2"
                   style={{ borderBottom: "1px solid var(--surface-border)" }}>

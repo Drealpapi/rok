@@ -3,17 +3,6 @@
 import * as React from "react";
 import { getAgentGlb } from "./agent-3d-config";
 
-/*
- * Hydration-safe 3D character component.
- *
- * The server always renders ONLY the placeholder circle.
- * The canvas is added client-side after hydration via useEffect,
- * so server HTML === initial client HTML → no hydration mismatch.
- *
- * After that first effect fires, the module cache and IntersectionObserver
- * do their work as usual.
- */
-
 type GLBViewerType = React.ComponentType<{
   url:         string;
   size:        number;
@@ -35,7 +24,6 @@ function loadGLBViewer(): Promise<void> {
   return _loadPromise;
 }
 
-// Start loading as soon as this module is evaluated on the client
 if (typeof window !== "undefined") {
   loadGLBViewer();
 }
@@ -72,35 +60,21 @@ export function Agent3D({
 }: Agent3DProps) {
   const [loaded,      setLoaded]      = React.useState(false);
   const [errored,     setErrored]     = React.useState(false);
-
-  /*
-   * HYDRATION KEY:
-   * Both of these start as FALSE so the server and the first client render
-   * produce identical HTML (just the placeholder circle, no canvas).
-   * useEffect runs only on the client after hydration, then sets these true.
-   */
-  const [clientReady, setClientReady] = React.useState(false); // false on server + first render
-  const [canMount,    setCanMount]    = React.useState(false); // false on server + first render
-  const [viewerReady, setViewerReady] = React.useState(false); // false on server + first render
+  // All start false — server and first client render produce identical HTML (nothing)
+  const [clientReady, setClientReady] = React.useState(false);
+  const [canMount,    setCanMount]    = React.useState(false);
+  const [viewerReady, setViewerReady] = React.useState(false);
 
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const glbUrl  = getAgentGlb(seed);
 
-  // Reset when the GLB url changes
   React.useEffect(() => {
     setLoaded(false);
     setErrored(false);
   }, [glbUrl]);
 
-  /*
-   * After hydration: mark client as ready, load the viewer module,
-   * and set up IntersectionObserver for small thumbnails.
-   * This runs only once per component instance, client-side only.
-   */
   React.useEffect(() => {
     setClientReady(true);
-
-    // Load the GLB viewer module
     if (_GLBViewer) {
       setViewerReady(true);
     } else {
@@ -113,30 +87,15 @@ export function Agent3D({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Set up viewport detection after clientReady
   React.useEffect(() => {
     if (!clientReady) return;
-
-    // Large previews always mount immediately
-    if (size >= 120) {
-      setCanMount(true);
-      return;
-    }
-
+    if (size >= 120) { setCanMount(true); return; }
     const el = wrapRef.current;
     if (!el) { setCanMount(true); return; }
-
-    // Already in view?
     const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 200) {
-      setCanMount(true);
-      return;
-    }
-
+    if (rect.top < window.innerHeight + 200) { setCanMount(true); return; }
     const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { setCanMount(true); obs.disconnect(); }
-      },
+      ([entry]) => { if (entry.isIntersecting) { setCanMount(true); obs.disconnect(); } },
       { rootMargin: "200px" }
     );
     obs.observe(el);
@@ -145,8 +104,10 @@ export function Agent3D({
 
   const handleLoaded = React.useCallback(() => setLoaded(true),  []);
   const handleError  = React.useCallback(() => setErrored(true), []);
+  const GLBViewer    = _GLBViewer;
 
-  const GLBViewer = _GLBViewer; // safe snapshot
+  // Nothing at all until loaded — no orange circle flash
+  const showCanvas = clientReady && canMount && viewerReady && !errored && GLBViewer;
 
   return (
     <div
@@ -159,52 +120,21 @@ export function Agent3D({
         display:    "block",
         flexShrink: 0,
         overflow:   "visible",
+        // Reserve space but stay invisible until loaded
+        opacity:    loaded ? 1 : 0,
+        transition: "opacity 0.6s ease",
       }}
     >
-      {/* Placeholder circle — server renders this, client fades it out */}
-      <div
-        aria-hidden
-        style={{
-          position:      "absolute",
-          inset:         0,
-          borderRadius:  "50%",
-          background:    `radial-gradient(circle at 35% 28%, ${accentColor}ee 0%, ${accentColor}88 50%, ${accentColor}44 100%)`,
-          boxShadow:     `0 4px 20px ${accentColor}55`,
-          transition:    "opacity 0.7s ease",
-          opacity:       loaded && !errored ? 0 : 1,
-          pointerEvents: "none",
-          zIndex:        0,
-        }}
-      />
-
-      {/*
-       * Canvas wrapper — NOT rendered on server (clientReady starts false).
-       * Added only after hydration completes, so server HTML matches client.
-       */}
-      {clientReady && canMount && viewerReady && !errored && GLBViewer && (
-        <div
-          style={{
-            position:   "absolute",
-            top:        0,
-            left:       0,
-            width:      size,
-            height:     size,
-            overflow:   "visible",
-            transition: "opacity 0.7s ease",
-            opacity:    loaded ? 1 : 0,
-            zIndex:     1,
-          }}
-        >
-          <GLBErrorBoundary>
-            <GLBViewer
-              url={glbUrl}
-              size={size}
-              cardHovered={cardHovered}
-              onLoaded={handleLoaded}
-              onError={handleError}
-            />
-          </GLBErrorBoundary>
-        </div>
+      {showCanvas && (
+        <GLBErrorBoundary>
+          <GLBViewer
+            url={glbUrl}
+            size={size}
+            cardHovered={cardHovered}
+            onLoaded={handleLoaded}
+            onError={handleError}
+          />
+        </GLBErrorBoundary>
       )}
     </div>
   );

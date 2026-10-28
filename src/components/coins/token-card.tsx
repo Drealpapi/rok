@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Copy, Lock, Unlock, ExternalLink } from "lucide-react";
+import { Copy, Lock, Unlock, Flame, Zap } from "lucide-react";
 import { shortAddress, formatNumber, hashString } from "@/lib/utils";
 import { Agent3D } from "@/components/shared/agent-3d";
+import { isJustLaunched, isHot } from "@/lib/seed-data";
 import type { SeedToken, SeedAgent } from "@/lib/seed-data";
 
-// Orange-spectrum accent palette — all tokens use variations of the brand accent
 const ACCENTS = [
   "#ff7628","#ff8c42","#e86520","#f0a040",
   "#e06020","#ff6010","#fa8030","#f07050",
@@ -17,8 +17,17 @@ function getAccent(ticker: string) {
 }
 
 export function TokenCard({ token, agent }: { token: SeedToken; agent?: SeedAgent }) {
-  const [copied, setCopied]           = React.useState(false);
+  const [copied,      setCopied]      = React.useState(false);
   const [cardHovered, setCardHovered] = React.useState(false);
+
+  // Client-side badge checks — safe to use Date.now() in client components
+  const [showNew, setShowNew] = React.useState(false);
+  const [showHot, setShowHot] = React.useState(false);
+
+  React.useEffect(() => {
+    setShowNew(isJustLaunched(token.createdAt));
+    setShowHot(isHot(token));
+  }, [token]);
 
   const pct    = Math.min((token.progressEth / token.thresholdEth) * 100, 100);
   const isOpen = token.status === "open" || token.status === "graduated";
@@ -26,142 +35,201 @@ export function TokenCard({ token, agent }: { token: SeedToken; agent?: SeedAgen
   const accent = getAccent(token.ticker);
 
   function handleCopy(e: React.MouseEvent) {
-    e.preventDefault(); // don't navigate on copy
+    e.preventDefault();
     try { navigator.clipboard.writeText(token.address); } catch { /* noop */ }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
 
   return (
-    // Entire card is a link — click anywhere to go to token detail
     <Link
       href={`/coins/${token.address}`}
       className="block card-3d overflow-visible"
-      style={{ textDecoration: "none" }}
+      style={{ textDecoration: "none", width: "100%", minWidth: 0 }}
       onMouseEnter={() => setCardHovered(true)}
       onMouseLeave={() => setCardHovered(false)}
     >
       {/* Accent top bar */}
-      <div className="h-0.5 w-full rounded-t-xl" style={{ background: accent }} />
+      <div style={{ height: 2, background: accent, borderRadius: "12px 12px 0 0" }} />
 
-      <div className="p-4">
-        {/* Header: 3D agent avatar + name + status + price change */}
-        <div className="flex items-start gap-3 mb-3">
+      <div style={{ padding: "14px" }}>
+
+        {/* ── Header: avatar + name + badges + price change ── */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+          {/* 3D agent avatar */}
           {agent && (
             <div style={{
               overflow: "visible", flexShrink: 0,
               background: `radial-gradient(circle at 50% 70%, ${accent}22 0%, transparent 70%)`,
-              borderRadius: "10px", padding: "4px 2px 0 2px",
-              marginTop: "-4px",
+              borderRadius: 10, padding: "4px 2px 0 2px", marginTop: -4,
             }}>
-              <Agent3D seed={agent.id} size={72} cardHovered={cardHovered} accentColor={accent} />
+              <Agent3D seed={agent.id} size={64} cardHovered={cardHovered} accentColor={accent} />
             </div>
           )}
 
-          <div className="flex-1 min-w-0">
+          {/* Name / ticker / status */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             {/* Badge row */}
-            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-              <span className="text-[9px] font-semibold rounded px-1.5 py-0.5"
-                style={{ background: "var(--surface-subtle)", color: "var(--text-muted)" }}>V2</span>
-              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-semibold"
-                style={isOpen
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, flexWrap: "wrap" }}>
+              <span style={{
+                fontSize: 9, fontWeight: 600, borderRadius: 4, padding: "1px 5px",
+                background: "var(--surface-subtle)", color: "var(--text-muted)",
+              }}>V2</span>
+
+              {/* Lock / Open status */}
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                borderRadius: 4, padding: "1px 5px", fontSize: 9, fontWeight: 700,
+                ...(isOpen
                   ? { background: "var(--status-positive-bg)", color: "var(--status-positive)" }
-                  : { background: "var(--accent-muted)", color: "var(--accent)" }}>
-                {isOpen ? <Unlock size={9} /> : <Lock size={9} />}
+                  : { background: "var(--accent-muted)",       color: "var(--accent)"          }),
+              }}>
+                {isOpen ? <Unlock size={8} /> : <Lock size={8} />}
                 {isOpen ? "Open" : "Locked"}
               </span>
+
+              {/* NEW badge — only within first hour */}
+              {showNew && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 3,
+                  borderRadius: 4, padding: "1px 6px", fontSize: 9, fontWeight: 800,
+                  background: "linear-gradient(135deg, #1d4ed8, #4f46e5)",
+                  color: "#fff",
+                  boxShadow: "0 0 8px rgba(79,70,229,0.55)",
+                  animation: "glowPulse 2s ease-in-out infinite",
+                }}>
+                  <Zap size={8} />
+                  NEW
+                </span>
+              )}
+
+              {/* HOT badge — strong performers */}
+              {showHot && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 3,
+                  borderRadius: 4, padding: "1px 6px", fontSize: 9, fontWeight: 800,
+                  background: "linear-gradient(135deg, #dc2626, #f97316)",
+                  color: "#fff",
+                  boxShadow: "0 0 8px rgba(239,68,68,0.55)",
+                  animation: "glowPulse 2.4s ease-in-out infinite",
+                }}>
+                  <Flame size={8} />
+                  HOT
+                </span>
+              )}
             </div>
 
-            <p className="text-sm font-semibold text-[--text-primary] truncate leading-tight">{token.name}</p>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>${token.ticker}</p>
+            <p style={{
+              fontSize: 13, fontWeight: 700, color: "var(--text-primary)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.2,
+            }}>
+              {token.name}
+            </p>
+            <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>${token.ticker}</p>
           </div>
 
-          {/* Price change — top-right */}
-          <span className="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
-            style={pnlUp
+          {/* Price change */}
+          <span style={{
+            flexShrink: 0, borderRadius: 6, padding: "3px 6px",
+            fontSize: 10, fontWeight: 700, fontVariantNumeric: "tabular-nums",
+            ...(pnlUp
               ? { background: "var(--status-positive-bg)", color: "var(--status-positive)" }
-              : { background: "var(--status-error-bg)", color: "var(--status-error)" }}>
+              : { background: "var(--status-error-bg)",    color: "var(--status-error)"    }),
+          }}>
             {pnlUp ? "+" : ""}{token.priceChangePercent.toFixed(1)}%
           </span>
         </div>
 
-        {/* Address — click to copy, stops propagation */}
-        <div className="flex items-center gap-1 mb-3" onClick={e => e.preventDefault()}>
-          <span className="text-[11px] font-mono truncate flex-1" style={{ color: "var(--text-muted)" }}>
+        {/* ── Address ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10 }}
+          onClick={e => e.preventDefault()}>
+          <span style={{ fontSize: 10, fontFamily: "monospace", color: "var(--text-muted)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {shortAddress(token.address, 5)}
           </span>
-          <button
-            onClick={handleCopy}
-            className="p-1 rounded hover:bg-[--surface-hover] transition-colors"
-            style={{ color: copied ? "var(--status-positive)" : "var(--text-muted)" }}
-            aria-label="Copy address"
-          >
+          <button onClick={handleCopy}
+            style={{
+              padding: 4, borderRadius: 4, background: "none", border: "none", cursor: "pointer",
+              color: copied ? "var(--status-positive)" : "var(--text-muted)", flexShrink: 0,
+            }}
+            aria-label="Copy address">
             <Copy size={11} />
           </button>
-          <span className="p-1 rounded" style={{ color: "var(--text-muted)" }}>
-            <ExternalLink size={11} />
-          </span>
         </div>
 
-        {/* Pool section */}
-        <div className="rounded-lg p-3 mb-3"
-          style={{
-            background: isOpen ? "var(--status-positive-bg)" : "var(--surface-subtle)",
-            border: `1px solid ${isOpen ? "var(--status-positive-border)" : "var(--surface-border)"}`,
-          }}>
+        {/* ── Pool section ── */}
+        <div style={{
+          borderRadius: 10, padding: "10px 12px", marginBottom: 10,
+          ...(isOpen
+            ? { background: "var(--status-positive-bg)", border: "1px solid var(--status-positive-border)" }
+            : { background: "var(--surface-subtle)",     border: "1px solid var(--surface-border)"         }),
+        }}>
           {isOpen ? (
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold" style={{ color: "var(--status-positive)" }}>Pool bonded</span>
-              <span className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-white"
-                style={{ background: "var(--status-positive)" }}>Open</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--status-positive)" }}>Pool bonded</span>
+              <span style={{
+                borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: "#fff",
+                background: "var(--status-positive)",
+              }}>Open</span>
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Pool</span>
-                <span className="text-[10px] font-semibold tabular-nums" style={{ color: accent }}>{pct.toFixed(0)}%</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Pool</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: accent, fontVariantNumeric: "tabular-nums" }}>
+                  {pct.toFixed(0)}%
+                </span>
               </div>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-base font-bold tabular-nums text-[--text-primary]">{token.progressEth.toFixed(2)}</span>
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>/ {token.thresholdEth} ETH</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 7 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                  {token.progressEth.toFixed(2)}
+                </span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>/ {token.thresholdEth} ETH</span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-border)" }}>
-                <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(pct, 1)}%`, background: accent }} />
+              <div style={{ height: 5, borderRadius: 3, overflow: "hidden", background: "var(--surface-border)" }}>
+                <div style={{
+                  height: "100%", borderRadius: 3,
+                  width: `${Math.max(pct, 1)}%`,
+                  background: accent,
+                  transition: "width 0.5s ease",
+                  boxShadow: `0 0 6px ${accent}88`,
+                }} />
               </div>
             </>
           )}
         </div>
 
-        {/* 4-metric row */}
-        <div className="grid grid-cols-4 gap-1.5 mb-3">
+        {/* ── 4-metric row ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 10 }}>
           {[
-            { l: "Vol",  v: `$${formatNumber(token.volumeUsd, 0)}`         },
-            { l: "Mcap", v: `$${formatNumber(token.marketCapUsd, 0)}`       },
-            { l: "Fees", v: `$${(token.volumeUsd * 0.0025).toFixed(0)}`    },
-            { l: "Tx",   v: token.txCount.toString()                        },
+            { l: "Vol",  v: `$${formatNumber(token.volumeUsd, 0)}`      },
+            { l: "Mcap", v: `$${formatNumber(token.marketCapUsd, 0)}`   },
+            { l: "Fees", v: `$${(token.volumeUsd * 0.0025).toFixed(0)}` },
+            { l: "Tx",   v: token.txCount.toString()                     },
           ].map(m => (
-            <div key={m.l} className="rounded-md py-2 text-center" style={{ background: "var(--surface-subtle)" }}>
-              <p className="text-[9px] uppercase tracking-wide mb-0.5" style={{ color: "var(--text-muted)", fontWeight: 600 }}>{m.l}</p>
-              <p className="text-xs font-semibold tabular-nums text-[--text-primary]">{m.v}</p>
+            <div key={m.l} style={{ borderRadius: 7, padding: "6px 4px", textAlign: "center", background: "var(--surface-subtle)" }}>
+              <p style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-muted)", fontWeight: 600, marginBottom: 2 }}>{m.l}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>{m.v}</p>
             </div>
           ))}
         </div>
 
-        {/* Footer: launching agent */}
-        <div className="flex items-center justify-between border-t border-[--surface-border] pt-3">
+        {/* ── Footer ── */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          paddingTop: 10, borderTop: "1px solid var(--surface-border)",
+        }}>
           {agent ? (
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-              @{agent.handle.slice(0, 10)}{" "}
-              <span className="font-semibold" style={{ color: pnlUp ? "var(--status-positive)" : "var(--status-error)" }}>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "55%" }}>
+              @{agent.handle.slice(0, 12)}{" "}
+              <span style={{ fontWeight: 700, color: pnlUp ? "var(--status-positive)" : "var(--status-error)" }}>
                 {pnlUp ? "▲" : "▼"}{Math.abs(token.priceChangePercent).toFixed(1)}%
               </span>
             </span>
           ) : <span />}
-          {/* Visual affordance — not a real separate button since whole card is a link */}
-          <span
-            className="rounded-md px-3 py-1.5 text-xs font-semibold text-white"
-            style={{ background: "var(--accent)" }}>
+          <span style={{
+            borderRadius: 7, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+            color: "#fff", background: "var(--accent)", flexShrink: 0,
+          }}>
             View
           </span>
         </div>

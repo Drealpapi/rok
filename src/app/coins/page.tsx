@@ -6,7 +6,7 @@ import { ApplicationShell } from "@/components/layout/application-shell";
 import { TokenCard } from "@/components/coins/token-card";
 import { TokenCardSkeleton } from "@/components/shared/loading-skeleton";
 import { NewCoinEntry, useNewCoins } from "@/components/coins/new-coin-entry";
-import { SEED_TOKENS, SEED_AGENTS, isRecentlyLaunched } from "@/lib/seed-data";
+import { SEED_TOKENS, SEED_AGENTS, isJustLaunched, isHot } from "@/lib/seed-data";
 import type { SeedToken } from "@/lib/seed-data";
 import { usePageReveal } from "@/hooks/use-reveal";
 
@@ -94,7 +94,7 @@ export default function CoinsPage() {
           <div className="coins-grid">
             {tokens.map((token, idx) => {
               const isRuntimeNew = newCoinIds.has(token.id);
-              const isSeedNew    = !isRuntimeNew && isRecentlyLaunched(token.createdAt);
+              const isSeedNew    = !isRuntimeNew && isJustLaunched(token.createdAt);
               return (
                 <div key={token.id}
                   className="anim-slide-card"

@@ -107,7 +107,7 @@ export function AgentCard({ agent }: { agent: SeedAgent }) {
           <div style={{ overflow: "visible", position: "relative", zIndex: 1, marginBottom: "-8px" }}>
             <Agent3D
               seed={agent.id}
-              size={175}
+              size={155}
               cardHovered={hovered}
               accentColor={agent.avatarColor}
             />

@@ -154,6 +154,8 @@ body {
   font-size: 14px;
   line-height: 1.6;
   transition: background 0.22s, color 0.22s;
+  /* Never allow horizontal scroll at the page level */
+  overflow-x: hidden;
 }
 
 h1, h2, h3, .font-display {
@@ -434,59 +436,50 @@ h1, h2, h3, .font-display {
 ══════════════════════════════════════════════════════════════════════════════ */
 
 /* ─── Agent card responsive layout ─────────────────────────────────────────── */
-/*
-  Mobile  (<640px): portrait panel full-width on top, content below
-  Tablet+ (≥640px): portrait panel fixed-width left, content right
-*/
 .agent-card-inner {
   display: flex;
-  flex-direction: column;   /* mobile: stacked */
+  flex-direction: column;
   overflow: visible;
 }
 .agent-card-portrait {
   width: 100%;
-  min-height: 200px;
-  border-radius: 14px 14px 0 0;   /* mobile: rounded top */
+  min-height: 190px;
+  border-radius: 14px 14px 0 0;
   border-bottom: 1px solid var(--surface-border);
 }
 
 @media (min-width: 640px) {
-  .agent-card-inner {
-    flex-direction: row;          /* tablet+: side by side */
-  }
-  .agent-card-portrait {
-    width: 140px;
-    min-height: 210px;
-    border-radius: 14px 0 0 14px; /* left rounded */
+  .agent-card-inner     { flex-direction: row; }
+  .agent-card-portrait  {
+    width: 130px;
+    min-height: 200px;
+    border-radius: 14px 0 0 14px;
     border-bottom: none;
     border-right: 1px solid var(--surface-border);
   }
 }
 
-/* ─── Feed card — tighter on small screens ──────────────────────────────────── */
-@media (max-width: 479px) {
-  .feed-card-padding { padding: 12px 14px !important; }
-  .feed-avatar-size  { display: none; } /* hide 3D avatar < 480px — just show content */
-}
-
-/* ─── Coins grid — 1 col on mobile, 2 on sm, 3 on md, 4 on xl ──────────────── */
-.coins-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-@media (min-width: 480px)  { .coins-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 768px)  { .coins-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1280px) { .coins-grid { grid-template-columns: repeat(4, 1fr); } }
-
-/* ─── Agents grid — 1 col mobile, 2 col lg, 3 col xl ───────────────────────── */
+/* ─── Agents grid — always fits, never overflows ────────────────────────────── */
 .agents-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+  /* minmax(0,1fr) is critical — prevents columns stretching beyond container */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
 }
-@media (min-width: 768px)  { .agents-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1280px) { .agents-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px)  { .agents-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .agents-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ─── Coins grid — always fits ──────────────────────────────────────────────── */
+.coins-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+@media (min-width: 480px)  { .coins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 768px)  { .coins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .coins-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* ─── Page padding — comfortable on mobile ──────────────────────────────────── */
 .page-padding {

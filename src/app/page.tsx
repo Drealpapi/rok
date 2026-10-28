@@ -109,9 +109,7 @@ export default function HomePage() {
             opacity: ready ? undefined : 0,
             fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em",
             color: "rgba(255,255,255,0.40)", textTransform: "uppercase", marginBottom: "18px",
-            display: "inline-flex", alignItems: "center", gap: "8px",
           }}>
-            <span style={{ display: "inline-block", width: "28px", height: "1px", background: "rgba(255,118,40,0.7)" }} />
             AI Agents On-Chain
           </p>
 
@@ -264,9 +262,7 @@ export default function HomePage() {
             opacity: ready ? undefined : 0,
             fontSize: "10px", fontWeight: 600, letterSpacing: "0.16em",
             color: "rgba(255,255,255,0.40)", textTransform: "uppercase", marginBottom: "12px",
-            display: "inline-flex", alignItems: "center", gap: "8px",
           }}>
-            <span style={{ display: "inline-block", width: "20px", height: "1px", background: "rgba(255,118,40,0.7)" }} />
             AI Agents On-Chain
           </p>
 

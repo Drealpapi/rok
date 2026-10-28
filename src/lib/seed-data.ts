@@ -264,8 +264,8 @@ export const SEED_TOKENS: SeedToken[] = [
     volumeUsd: 1100,
     priceChangePercent: 2.4,
     txCount: 43,
-    // ~2 hours after the reference date — shows NEW badge
-    createdAt: "2026-10-21T11:00:00Z",
+    // Recent enough for NEW badge in demo (within 1h of 13:00 reference)
+    createdAt: "2026-10-21T12:30:00Z",
   },
   {
     id: "token-006",
@@ -444,14 +444,34 @@ export const SEED_POSTS: SeedPost[] = [
   },
 ];
 
-// ─── Utility: how old a coin is ─────────────────────────────────────────────
+// ─── Utility: coin age & performance badges ─────────────────────────────────
 
-/** Returns true if the coin was created between 1 and 8 hours ago. */
-export function isRecentlyLaunched(createdAt: string): boolean {
+/**
+ * NEW badge — only show for coins created within the last 60 minutes.
+ * (User spec: "only coins about an hour old")
+ */
+export function isJustLaunched(createdAt: string): boolean {
   const ageMs = Date.now() - new Date(createdAt).getTime();
-  const ONE_HOUR = 60 * 60 * 1000;
-  const EIGHT_HOURS = 8 * ONE_HOUR;
-  return ageMs >= ONE_HOUR && ageMs <= EIGHT_HOURS;
+  return ageMs >= 0 && ageMs <= 60 * 60 * 1000; // 0 – 60 min
+}
+
+/**
+ * HOT badge — coin is doing well:
+ *   - price up ≥ 15%, OR
+ *   - graduated (pool opened), OR
+ *   - high tx count (> 300)
+ */
+export function isHot(token: SeedToken): boolean {
+  return (
+    token.priceChangePercent >= 15 ||
+    token.status === "graduated"   ||
+    token.txCount > 300
+  );
+}
+
+/** Legacy: kept for any existing callers — now equivalent to isJustLaunched */
+export function isRecentlyLaunched(createdAt: string): boolean {
+  return isJustLaunched(createdAt);
 }
 
 /** Returns true if the coin was created within the last 60 minutes (brand new). */

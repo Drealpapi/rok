@@ -35,8 +35,11 @@ export function ApplicationShell({ children, rightSidebar, className }: Applicat
           style={{
             animationDuration: "0.75s",
             animationDelay:    "0.05s",
-            /* ensure content doesn't sit under mobile header (52px) */
             scrollPaddingTop:  "52px",
+            /* Critical: prevent any child from blowing out horizontal scroll */
+            overflowX:         "hidden",
+            width:             "100%",
+            minWidth:          0,
           }}
         >
           {children}

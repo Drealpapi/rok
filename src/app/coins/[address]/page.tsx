@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { connection } from "next/server";
 import { ArrowLeft, Copy, ExternalLink, Lock } from "lucide-react";
 import { ApplicationShell } from "@/components/layout/application-shell";
 import { Agent3D } from "@/components/shared/agent-3d";
@@ -15,7 +14,6 @@ export async function generateStaticParams() {
 }
 
 export default async function TokenDetailPage({ params }: TokenPageProps) {
-  await connection();
   const { address } = await params;
   const token = SEED_TOKENS.find(t => t.address === address);
   if (!token) notFound();

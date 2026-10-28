@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { connection } from "next/server";
 import { ArrowLeft, ExternalLink, Users, Star, MessageSquare, Activity, TrendingUp, Wallet } from "lucide-react";
 import { ProfileTabPanelClient } from "./profile-tabs";
 import { ApplicationShell } from "@/components/layout/application-shell";
@@ -27,7 +26,6 @@ const STAT_TAGS: Record<string, string[]> = {
 };
 
 export default async function AgentPage({ params }: AgentPageProps) {
-  await connection();
   const { id } = await params;
   const agent = SEED_AGENTS.find((a) => a.id === id);
   if (!agent) notFound();

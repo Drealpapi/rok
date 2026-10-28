@@ -8,12 +8,13 @@ import { Agent3D } from "@/components/shared/agent-3d";
 import { TimeAgo } from "@/components/shared/time-ago";
 import type { SeedPost, SeedAgent, SeedToken } from "@/lib/seed-data";
 
-const ACTION_COLORS: Record<string, string> = {
-  POSTED:   "#8b8b9a",
-  REPLIED:  "#60a5fa",
-  BOUGHT:   "#4ade80",
-  SOLD:     "#ff7628",
-  LAUNCHED: "#ff7628",
+const ACTION_LABEL: Record<string, { label: string; color: string; bg: string }> = {
+  POSTED:   { label: "POSTED",   color: "#8b8b9a", bg: "rgba(139,139,154,0.12)" },
+  REPLIED:  { label: "REPLIED",  color: "#a78bfa", bg: "rgba(167,139,250,0.14)" },
+  QUOTED:   { label: "QUOTED",   color: "#a78bfa", bg: "rgba(167,139,250,0.14)" },
+  BOUGHT:   { label: "BOUGHT",   color: "#4ade80", bg: "rgba(74,222,128,0.12)"  },
+  SOLD:     { label: "SOLD",     color: "#ff7628", bg: "rgba(255,118,40,0.12)"  },
+  LAUNCHED: { label: "LAUNCHED", color: "#ff7628", bg: "rgba(255,118,40,0.12)"  },
 };
 
 interface FeedCardProps {
@@ -26,102 +27,104 @@ interface FeedCardProps {
 }
 
 export function FeedCard({ post, agent, token, replyTo, replyAgent, className }: FeedCardProps) {
-  const [liked, setLiked]             = React.useState(false);
-  const [likeCount, setLikeCount]     = React.useState(post.likes);
+  const [liked,       setLiked]       = React.useState(false);
+  const [likeCount,   setLikeCount]   = React.useState(post.likes);
   const [avatarHover, setAvatarHover] = React.useState(false);
 
-  const actionColor = ACTION_COLORS[post.action] ?? ACTION_COLORS.POSTED;
+  const action = ACTION_LABEL[post.action] ?? ACTION_LABEL.POSTED;
 
   return (
     <article
       className={cn("group relative", className)}
-      style={{
-        borderBottom: "1px solid var(--surface-border)",
-        transition: "background 0.12s",
-      }}
+      style={{ borderBottom: "1px solid var(--surface-border)", transition: "background 0.10s" }}
       onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-hover)")}
       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
     >
-      <div className="flex gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3">
+      <div style={{ display: "flex", gap: 10, padding: "12px 16px" }}>
 
-        {/* Avatar column — hidden on very small screens */}
-        <div className="hidden xs:flex flex-col items-center flex-shrink-0" style={{ display: "flex" }}>
-          <div
-            style={{ overflow: "visible", cursor: "pointer" }}
-            onMouseEnter={() => setAvatarHover(true)}
-            onMouseLeave={() => setAvatarHover(false)}
-          >
-            <Link href={`/agents/${agent.id}`} style={{ display: "block", overflow: "visible" }}>
-              <Agent3D seed={agent.id} size={46} cardHovered={avatarHover} accentColor={agent.avatarColor} />
-            </Link>
-          </div>
-          {/* Thin thread line if there's a reply below */}
+        {/* Avatar */}
+        <div style={{ flexShrink: 0, overflow: "visible" }}
+          onMouseEnter={() => setAvatarHover(true)}
+          onMouseLeave={() => setAvatarHover(false)}>
+          <Link href={`/agents/${agent.id}`} style={{ display: "block", overflow: "visible" }}>
+            <Agent3D seed={agent.id} size={38} cardHovered={avatarHover} accentColor={agent.avatarColor} />
+          </Link>
           {replyTo && (
-            <div className="w-0.5 flex-1 mt-1 rounded-full" style={{ background: "var(--surface-border)", minHeight: "20px" }} />
+            <div style={{ width: 1, background: "var(--surface-border)", margin: "3px auto 0", minHeight: 16 }} />
           )}
         </div>
 
-        {/* Content column */}
-        <div className="flex-1 min-w-0 pt-0.5">
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
 
-          {/* Reply context */}
-          {replyTo && replyAgent && (
-            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
-              Replying to{" "}
-              <Link href={`/agents/${replyAgent.id}`}
-                className="font-semibold hover:underline" style={{ color: "var(--accent)" }}>
-                @{replyAgent.handle}
-              </Link>
-            </p>
-          )}
-
-          {/* Header: name · handle · time · action */}
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          {/* Header line: name · handle · time — action pill right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, flexWrap: "wrap" }}>
             <Link href={`/agents/${agent.id}`}
-              className="font-semibold text-sm text-[--text-primary] hover:underline leading-tight">
+              style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", textDecoration: "none", lineHeight: 1.2 }}>
               {agent.name}
             </Link>
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>@{agent.handle}</span>
-            <span style={{ color: "var(--surface-border)" }}>·</span>
-            <TimeAgo date={post.createdAt} className="text-xs" style={{ color: "var(--text-muted)" } as React.CSSProperties} />
-            {/* Action label — colored dot + text, no pill */}
-            <span className="flex items-center gap-1 text-xs font-medium ml-auto"
-              style={{ color: actionColor }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: actionColor }} />
-              {post.action.charAt(0) + post.action.slice(1).toLowerCase()}
+            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>@{agent.handle}</span>
+            <span style={{ fontSize: 11, color: "var(--surface-border)" }}>·</span>
+            <TimeAgo date={post.createdAt} style={{ fontSize: 11, color: "var(--text-muted)" } as React.CSSProperties} />
+            {/* Action label — pill, top-right like reference */}
+            <span style={{
+              marginLeft: "auto", flexShrink: 0,
+              borderRadius: 4, padding: "1px 6px",
+              fontSize: 9, fontWeight: 800, letterSpacing: "0.05em",
+              background: action.bg, color: action.color,
+            }}>
+              {action.label}
             </span>
           </div>
 
-          {/* Post content */}
-          <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-primary)", opacity: 0.9 }}>
+          {/* Reply context */}
+          {replyTo && replyAgent && (
+            <div style={{ margin: "4px 0 6px", padding: "6px 10px", borderRadius: 8, background: "var(--surface-subtle)", border: "1px solid var(--surface-border)" }}>
+              <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>
+                Replying to{" "}
+                <Link href={`/agents/${replyAgent.id}`}
+                  style={{ fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}>
+                  @{replyAgent.handle}
+                </Link>
+              </p>
+              <p style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                {replyTo.content.slice(0, 100)}{replyTo.content.length > 100 ? "…" : ""}
+              </p>
+            </div>
+          )}
+
+          {/* Post text */}
+          <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--text-primary)", opacity: 0.92, marginBottom: 8 }}>
             {post.content}
           </p>
 
-          {/* LIVE P&L badge */}
+          {/* P&L badge */}
           {post.pnlUsd !== undefined && (
-            <div className="inline-flex items-center gap-2 rounded-xl px-3 py-2 mb-3 text-xs font-semibold"
-              style={{
-                background: post.pnlUsd >= 0 ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
-                border: `1px solid ${post.pnlUsd >= 0 ? "rgba(74,222,128,0.22)" : "rgba(248,113,113,0.22)"}`,
-                color: post.pnlUsd >= 0 ? "var(--status-positive)" : "var(--status-error)",
-              }}>
-              <TrendingUp size={13} />
-              <span>LIVE P&L</span>
-              <span className="font-black">▲ 0.002 ETH</span>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              borderRadius: 8, padding: "5px 10px", marginBottom: 8,
+              fontSize: 11, fontWeight: 600,
+              background: post.pnlUsd >= 0 ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
+              border: `1px solid ${post.pnlUsd >= 0 ? "rgba(74,222,128,0.22)" : "rgba(248,113,113,0.22)"}`,
+              color: post.pnlUsd >= 0 ? "var(--status-positive)" : "var(--status-error)",
+            }}>
+              <TrendingUp size={12} />
+              <span style={{ fontWeight: 800 }}>▲ 0.002 ETH</span>
               <span style={{ opacity: 0.7 }}>${(Math.abs(post.pnlUsd) * 2400).toFixed(2)}</span>
             </div>
           )}
 
-          {/* Token mention — pill style */}
+          {/* Token mention */}
           {token && post.pnlUsd === undefined && (
             <Link href={`/coins/${token.address}`}
-              className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 mb-3 text-xs font-semibold transition-all hover:scale-[1.02]"
               style={{
-                background: "var(--surface-subtle)",
-                border: "1px solid var(--surface-border)",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                borderRadius: 8, padding: "4px 10px", marginBottom: 8,
+                fontSize: 11, fontWeight: 600, textDecoration: "none",
+                background: "var(--surface-subtle)", border: "1px solid var(--surface-border)",
                 color: "var(--text-secondary)",
               }}>
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: agent.avatarColor }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: agent.avatarColor, flexShrink: 0 }} />
               ${token.ticker}
               <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>·</span>
               <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
@@ -130,35 +133,29 @@ export function FeedCard({ post, agent, token, replyTo, replyAgent, className }:
             </Link>
           )}
 
-          {/* Action row — Twitter-style */}
-          <div className="flex items-center gap-6 mt-1">
+          {/* Action row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 2 }}>
             <button
               onClick={() => { setLiked(v => !v); setLikeCount(c => liked ? c - 1 : c + 1); }}
-              className="flex items-center gap-1.5 text-xs group/btn transition-colors"
-              style={{ color: liked ? "#f43f5e" : "var(--text-muted)" }}
+              style={{
+                display: "flex", alignItems: "center", gap: 4,
+                fontSize: 11, color: liked ? "#f43f5e" : "var(--text-muted)",
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+              }}
               aria-pressed={liked}
             >
-              <div className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-                style={{ background: liked ? "rgba(244,63,94,0.12)" : "transparent" }}>
-                <Heart size={15} fill={liked ? "currentColor" : "none"} strokeWidth={liked ? 0 : 1.8} />
-              </div>
-              <span className="tabular-nums">{likeCount}</span>
+              <Heart size={13} fill={liked ? "currentColor" : "none"} strokeWidth={liked ? 0 : 1.8} />
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{likeCount}</span>
             </button>
 
-            <button className="flex items-center gap-1.5 text-xs transition-colors hover:text-sky-400"
-              style={{ color: "var(--text-muted)" }}>
-              <div className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sky-400/10 transition-colors">
-                <MessageCircle size={15} strokeWidth={1.8} />
-              </div>
-              <span className="tabular-nums">{post.replies}</span>
+            <button style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <MessageCircle size={13} strokeWidth={1.8} />
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{post.replies}</span>
             </button>
 
-            <button className="flex items-center gap-1.5 text-xs transition-colors hover:text-emerald-400"
-              style={{ color: "var(--text-muted)" }}>
-              <div className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-emerald-400/10 transition-colors">
-                <Repeat2 size={15} strokeWidth={1.8} />
-              </div>
-              <span className="tabular-nums">{post.reposts}</span>
+            <button style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <Repeat2 size={13} strokeWidth={1.8} />
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{post.reposts}</span>
             </button>
           </div>
         </div>

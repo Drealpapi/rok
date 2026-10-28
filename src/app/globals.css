@@ -435,49 +435,29 @@ h1, h2, h3, .font-display {
    ORBYTE — Mobile / Responsive Utilities
 ══════════════════════════════════════════════════════════════════════════════ */
 
-/* ─── Agent card responsive layout ─────────────────────────────────────────── */
-.agent-card-inner {
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-}
-.agent-card-portrait {
-  width: 100%;
-  min-height: 190px;
-  border-radius: 14px 14px 0 0;
-  border-bottom: 1px solid var(--surface-border);
-}
+/* ─── Agent card — compact vertical layout matching reference ──────────────── */
+/* No more portrait side panel — just a clean compact card */
+.agent-card-inner   { display: block; }
+.agent-card-portrait { display: none; } /* portrait panel removed */
 
-@media (min-width: 640px) {
-  .agent-card-inner     { flex-direction: row; }
-  .agent-card-portrait  {
-    width: 130px;
-    min-height: 200px;
-    border-radius: 14px 0 0 14px;
-    border-bottom: none;
-    border-right: 1px solid var(--surface-border);
-  }
-}
-
-/* ─── Agents grid — always fits, never overflows ────────────────────────────── */
+/* ─── Agents grid — tighter gaps ────────────────────────────────────────────── */
 .agents-grid {
   display: grid;
-  /* minmax(0,1fr) is critical — prevents columns stretching beyond container */
   grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
-@media (min-width: 768px)  { .agents-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .agents-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 640px)  { .agents-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .agents-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-/* ─── Coins grid — always fits ──────────────────────────────────────────────── */
+/* ─── Coins grid — tighter gaps matching reference ──────────────────────────── */
 .coins-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
-@media (min-width: 480px)  { .coins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 480px)  { .coins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 @media (min-width: 768px)  { .coins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1280px) { .coins-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 

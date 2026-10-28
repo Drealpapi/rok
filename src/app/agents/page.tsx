@@ -120,51 +120,48 @@ export default function AgentsPage() {
 
   return (
     <ApplicationShell>
-      <div className="w-full max-w-6xl mx-auto page-padding space-y-5">
+      <div className="w-full max-w-6xl mx-auto page-padding" style={{ paddingTop: 12, paddingBottom: 16 }}>
 
-        {/* Page header */}
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-[--text-primary] tracking-tight">Agents</h1>
-            <p className="text-xs sm:text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-              Discover and follow AI agents that create, trade and generate value.
-            </p>
-          </div>
-
-          {/* Controls row */}
-          <div className="flex items-center gap-2 w-full sm:w-auto mt-1">
-            {/* Sort tabs — scrollable on mobile */}
-            <div className="flex items-center rounded-lg overflow-hidden flex-1 sm:flex-none"
-              style={{ background: "var(--surface-subtle)", border: "1px solid var(--surface-border)" }}>
+        {/* Page header — matches reference: title + sort tabs + live indicator + search */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-syne)" }}>Agents</h1>
+            {/* Sort tabs */}
+            <div style={{ display: "flex", alignItems: "center", gap: 2, borderRadius: 20, padding: "2px 3px", background: "var(--surface-subtle)", border: "1px solid var(--surface-border)" }}>
               {SORT_TABS.map(t => (
                 <button key={t.id} onClick={() => switchSort(t.id)}
-                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs font-semibold transition-all"
                   style={{
+                    borderRadius: 18, padding: "3px 10px", fontSize: 11, border: "none", cursor: "pointer", transition: "all 0.15s",
                     background: sort === t.id ? "var(--accent)" : "transparent",
-                    color:      sort === t.id ? "white"          : "var(--text-muted)",
-                    borderRight: t.id !== "new" ? "1px solid var(--surface-border)" : "none",
+                    color: sort === t.id ? "#fff" : "var(--text-muted)",
+                    fontWeight: sort === t.id ? 700 : 400,
                   }}>
                   {t.label}
                 </button>
               ))}
             </div>
-
+            {/* Live indicator */}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, color: "#f87171", padding: "2px 8px", borderRadius: 20, background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.22)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171", animation: "livePulse 1.8s ease-in-out infinite" }} />
+              Live
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* Filter button */}
             <button
               onClick={() => setShowFilter(v => !v)}
-              className="relative w-9 h-9 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
-              aria-label="Filter agents"
-              aria-expanded={showFilter}
               style={{
+                position: "relative", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: 8, cursor: "pointer", transition: "all 0.15s",
                 background: showFilter || activeFilterCount > 0 ? "var(--accent-muted)" : "var(--surface-subtle)",
-                border:     `1px solid ${showFilter || activeFilterCount > 0 ? "var(--accent-border)" : "var(--surface-border)"}`,
-                color:      showFilter || activeFilterCount > 0 ? "var(--accent)" : "var(--text-muted)",
+                border: `1px solid ${showFilter || activeFilterCount > 0 ? "var(--accent-border)" : "var(--surface-border)"}`,
+                color: showFilter || activeFilterCount > 0 ? "var(--accent)" : "var(--text-muted)",
               }}
+              aria-label="Filter" aria-expanded={showFilter}
             >
-              <SlidersHorizontal size={14} />
+              <SlidersHorizontal size={13} />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[9px] font-black text-white flex items-center justify-center"
-                  style={{ background: "var(--accent)" }}>
+                <span style={{ position: "absolute", top: -6, right: -6, width: 14, height: 14, borderRadius: "50%", fontSize: 8, fontWeight: 800, color: "#fff", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {activeFilterCount}
                 </span>
               )}
@@ -241,15 +238,24 @@ export default function AgentsPage() {
           </div>
         )}
 
-        {/* Stat cards */}
+        {/* Stat cards — compact, 3-col always, colored backgrounds like reference */}
         <div
           ref={statsRef as React.RefObject<HTMLDivElement>}
-          className={`grid grid-cols-3 gap-2 sm:gap-3 stagger-children ${statsVisible ? "anim-fade-up" : ""}`}
-          style={{ opacity: statsVisible ? undefined : 0 }}
+          className={`grid grid-cols-3 gap-2 ${statsVisible ? "anim-fade-up" : ""}`}
+          style={{ opacity: statsVisible ? undefined : 0, marginBottom: 12 }}
         >
-          <StatCard label="Total"   value={SEED_AGENTS.length} color="#ff7628" />
-          <StatCard label="Active"  value={active}             color="#22c55e" />
-          <StatCard label="Asleep"  value={asleep}             color="#6b7280" />
+          <div style={{ borderRadius: 10, padding: "10px 14px", background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.18)" }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: "#4ade80", lineHeight: 1, fontFamily: "var(--font-syne)" }}>{active}</p>
+            <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>Active</p>
+          </div>
+          <div style={{ borderRadius: 10, padding: "10px 14px", background: "rgba(96,165,250,0.10)", border: "1px solid rgba(96,165,250,0.18)" }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: "#60a5fa", lineHeight: 1, fontFamily: "var(--font-syne)" }}>{asleep}</p>
+            <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>Asleep</p>
+          </div>
+          <div style={{ borderRadius: 10, padding: "10px 14px", background: "rgba(139,139,154,0.10)", border: "1px solid rgba(139,139,154,0.18)" }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", lineHeight: 1, fontFamily: "var(--font-syne)" }}>{SEED_AGENTS.length}</p>
+            <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</p>
+          </div>
         </div>
 
         {/* Agent grid */}

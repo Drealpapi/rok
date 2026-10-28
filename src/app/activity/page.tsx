@@ -9,11 +9,11 @@ import { timeAgo } from "@/lib/utils";
 import { usePageReveal } from "@/hooks/use-reveal";
 
 const ACTION_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  BOUGHT:   { label: "Bought",   color: "#4ade80", bg: "rgba(74,222,128,0.12)"  },
-  SOLD:     { label: "Sold",     color: "#ff7628", bg: "rgba(255,118,40,0.12)"  },
-  POSTED:   { label: "Posted",   color: "#8b8b9a", bg: "rgba(139,139,154,0.10)" },
-  REPLIED:  { label: "Replied",  color: "#60a5fa", bg: "rgba(96,165,250,0.12)"  },
-  LAUNCHED: { label: "Launched", color: "#ff7628", bg: "rgba(255,118,40,0.12)"  },
+  BOUGHT:   { label: "BOUGHT",   color: "#4ade80", bg: "rgba(74,222,128,0.14)"  },
+  SOLD:     { label: "SOLD",     color: "#ff7628", bg: "rgba(255,118,40,0.14)"  },
+  POSTED:   { label: "POSTED",   color: "#8b8b9a", bg: "rgba(139,139,154,0.12)" },
+  REPLIED:  { label: "REPLIED",  color: "#a78bfa", bg: "rgba(167,139,250,0.14)" },
+  LAUNCHED: { label: "LAUNCHED", color: "#ff7628", bg: "rgba(255,118,40,0.14)"  },
 };
 
 export default function ActivityPage() {
@@ -25,24 +25,41 @@ export default function ActivityPage() {
 
   return (
     <ApplicationShell>
-      <div className="max-w-xl w-full mx-auto" style={{ borderRight: "1px solid var(--surface-border)", borderLeft: "1px solid var(--surface-border)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 680, width: "100%", margin: "0 auto", minHeight: "100vh",
+        borderRight: "1px solid var(--surface-border)", borderLeft: "1px solid var(--surface-border)" }}>
 
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between"
-          style={{ background: "var(--surface-app)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--surface-border)" }}>
-          <h1 className="text-base font-bold text-[--text-primary]">Activity</h1>
-          <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--text-muted)" }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-[--accent] live-pulse" />
+        <div style={{
+          position: "sticky", top: 0, zIndex: 10,
+          padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "var(--surface-app)", backdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--surface-border)",
+        }}>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-syne)" }}>Activity</h1>
+            <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>
+              Every trade, launch, drop, and post from agents on the pad.
+            </p>
+          </div>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+            color: "#f87171", padding: "3px 8px", borderRadius: 20,
+            background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.22)",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f87171",
+              animation: "livePulse 1.8s ease-in-out infinite" }} />
             Live
           </span>
         </div>
 
-        {/* Timeline */}
+        {/* Timeline — tight rows */}
         {posts.map((post, i) => {
-          const agent = agentMap[post.agentId];
+          const agent    = agentMap[post.agentId];
           if (!agent) return null;
-          const token = post.tokenId ? tokenMap[post.tokenId] : undefined;
-          const style = ACTION_STYLE[post.action] ?? ACTION_STYLE.POSTED;
+          const token    = post.tokenId ? tokenMap[post.tokenId] : undefined;
+          const style    = ACTION_STYLE[post.action] ?? ACTION_STYLE.POSTED;
           const isHovered = hoveredId === post.id;
 
           return (
@@ -51,74 +68,77 @@ export default function ActivityPage() {
               className={ready ? "anim-fade-up" : ""}
               style={{
                 opacity: ready ? undefined : 0,
-                animationDelay: `${Math.min(i * 0.12, 1.0)}s`,
+                animationDelay: `${Math.min(i * 0.08, 0.7)}s`,
+                display: "flex", alignItems: "flex-start", gap: 10,
+                padding: "10px 16px",
                 borderBottom: "1px solid var(--surface-border)",
-                padding: "14px 20px",
                 background: isHovered ? "var(--surface-hover)" : "transparent",
-                transition: "background 0.12s",
+                transition: "background 0.10s",
                 cursor: "pointer",
               }}
               onMouseEnter={() => setHoveredId(post.id)}
               onMouseLeave={() => setHoveredId(null)}
             >
-              <div className="flex gap-3">
+              {/* Avatar */}
+              <div style={{ overflow: "visible", flexShrink: 0, marginTop: 1 }}>
+                <Link href={`/agents/${agent.id}`} style={{ display: "block", overflow: "visible" }}>
+                  <Agent3D seed={agent.id} size={34} cardHovered={isHovered} accentColor={agent.avatarColor} />
+                </Link>
+              </div>
 
-                {/* Avatar */}
-                <div style={{ overflow: "visible", flexShrink: 0 }}>
-                  <Link href={`/agents/${agent.id}`} style={{ display: "block", overflow: "visible" }}>
-                    <Agent3D seed={agent.id} size={44} cardHovered={isHovered} accentColor={agent.avatarColor} />
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {/* First line: handle + badge + token + timestamp */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, flexWrap: "wrap" }}>
+                  <Link href={`/agents/${agent.id}`}
+                    style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", textDecoration: "none" }}>
+                    @{agent.handle}
                   </Link>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  {/* First line */}
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <Link href={`/agents/${agent.id}`}
-                      className="text-sm font-semibold text-[--text-primary] hover:underline">
-                      @{agent.handle}
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    {post.action === "REPLIED" ? "replied" : post.action === "BOUGHT" ? "bought" : post.action === "SOLD" ? "sold" : post.action === "LAUNCHED" ? "launched" : "posted"}
+                  </span>
+                  {/* Action badge */}
+                  <span style={{
+                    borderRadius: 4, padding: "1px 6px",
+                    fontSize: 9, fontWeight: 800, letterSpacing: "0.04em",
+                    background: style.bg, color: style.color,
+                  }}>
+                    {style.label}
+                  </span>
+                  {/* Token mention */}
+                  {token && (
+                    <Link href={`/coins/${token.address}`}
+                      style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>
+                      ${token.ticker}
                     </Link>
-                    {/* Action badge */}
-                    <span className="rounded-full px-2 py-0.5 text-[10px] font-bold"
-                      style={{ background: style.bg, color: style.color }}>
-                      {style.label}
-                    </span>
-                    {/* Token mention */}
-                    {token && (
-                      <Link href={`/coins/${token.address}`}
-                        className="text-xs font-semibold hover:underline"
-                        style={{ color: "var(--accent)" }}>
-                        ${token.ticker}
-                      </Link>
-                    )}
-                    <span className="ml-auto text-[10px] tabular-nums flex-shrink-0"
-                      style={{ color: "var(--text-muted)" }}>
-                      {timeAgo(post.createdAt)}
-                    </span>
-                  </div>
-
-                  {/* Post text */}
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                    {post.content}
-                  </p>
-
-                  {/* P&L for trades */}
-                  {post.pnlUsd !== undefined && (
-                    <div className="inline-flex items-center gap-2 mt-2 rounded-lg px-3 py-1.5 text-xs font-semibold"
-                      style={{
-                        background: post.pnlUsd >= 0 ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
-                        color: post.pnlUsd >= 0 ? "var(--status-positive)" : "var(--status-error)",
-                        border: `1px solid ${post.pnlUsd >= 0 ? "rgba(74,222,128,0.22)" : "rgba(248,113,113,0.22)"}`,
-                      }}>
-                      ▲ 0.002 ETH · ${(Math.abs(post.pnlUsd) * 2400).toFixed(2)}
-                    </div>
                   )}
+                  {/* Timestamp — far right */}
+                  <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-muted)", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                    {timeAgo(post.createdAt)}
+                  </span>
                 </div>
+
+                {/* Post text */}
+                <p style={{ fontSize: 12, lineHeight: 1.5, color: "var(--text-secondary)" }}>
+                  {post.content}
+                </p>
+
+                {/* P&L */}
+                {post.pnlUsd !== undefined && (
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", gap: 6, marginTop: 5,
+                    borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600,
+                    background: post.pnlUsd >= 0 ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
+                    color: post.pnlUsd >= 0 ? "var(--status-positive)" : "var(--status-error)",
+                    border: `1px solid ${post.pnlUsd >= 0 ? "rgba(74,222,128,0.22)" : "rgba(248,113,113,0.22)"}`,
+                  }}>
+                    ▲ 0.002 ETH · ${(Math.abs(post.pnlUsd) * 2400).toFixed(2)}
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
-
       </div>
     </ApplicationShell>
   );
